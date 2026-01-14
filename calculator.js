@@ -1,14 +1,4 @@
 // Example material data
-const materials = {
-  acrylic: {
-    3: {cutSpeed: 20, sheetCost: 25, engraveSpeed: 2},
-    6: {cutSpeed: 12, sheetCost: 40, engraveSpeed: 1.5}
-  },
-  plywood: {
-    3: {cutSpeed: 25, sheetCost: 18, engraveSpeed: 2},
-    6: {cutSpeed: 15, sheetCost: 30, engraveSpeed: 1.5}
-  }
-};
 
 const setupFee = 15;
 const machineRate = 45; // €/hour
@@ -57,9 +47,16 @@ async function calculateQuote() {
     }
 
     // Calculate times and price
-    const cutSpeed = materials[material][thickness].cutSpeed;
-    const engravingSpeed = materials[material][thickness].engraveSpeed;
-    const sheetCost = materials[material][thickness].sheetCost;
+    // Get material + thickness data from materials.js
+    const thickness = parseInt(
+      document.getElementById("thicknessSelect").value
+    );
+
+    const materialData = getMaterialData(material, thickness);
+
+    if (!materialData) {
+    alert
+
 
     const cutTimeSec = totalCutLength / cutSpeed * 1.15; // 15% buffer
     const engravingTimeSec = engravingArea / engravingSpeed;
