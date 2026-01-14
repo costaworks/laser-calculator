@@ -7,8 +7,10 @@ const minimumPrice = 10; // €
 function updateThicknessSelector() {
   const materialName = document.getElementById('materialSelect').value;
   const material = materialTable.find(m => m.material === materialName);
+
   const thicknessContainer = document.getElementById('thicknessContainer');
   const thicknessSelect = document.getElementById('thicknessSelect');
+  const engravingNote = document.getElementById('engravingNote');
 
   if (!material) return;
 
@@ -22,10 +24,13 @@ function updateThicknessSelector() {
       thicknessSelect.appendChild(option);
     });
     thicknessContainer.style.display = "block";
+    thicknessSelect.style.display = "inline-block";
+    engravingNote.style.display = "none"; // hide note for cutting materials
   } else {
     // Engraving-only
-    thicknessContainer.style.display = "none";
-    alert(`"${materialName}" is an engraving-only material. Thickness is not required.`);
+    thicknessContainer.style.display = "block"; // keep container visible
+    thicknessSelect.style.display = "none";     // hide dropdown
+    engravingNote.style.display = "block";      // show engraving note
   }
 }
 
