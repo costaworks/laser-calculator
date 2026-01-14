@@ -1,4 +1,5 @@
 // calculator.js
+
 const setupFee = 5;      // € setup fee
 const machineRate = 45;  // €/hour
 const minimumPrice = 10; // €
@@ -43,16 +44,18 @@ function getPartArea(fileContent, fileName) {
     const svgDoc = parser.parseFromString(fileContent, "image/svg+xml");
     const paths = svgDoc.querySelectorAll("path");
     paths.forEach(path => {
-      const bbox = path.getBBox ? path.getBBox() : { width: 0, height: 0 };
-      totalArea += bbox.width * bbox.height; // mm²
+      if (path.getBBox) {
+        const bbox = path.getBBox();
+        totalArea += bbox.width * bbox.height; // mm²
+      }
     });
   } else if (fileName.endsWith('.dxf')) {
     if (typeof DxfParser === "undefined") return 0;
     const parser = new DxfParser();
     const dxf = parser.parseSync(fileContent);
-    let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     dxf.entities.forEach(ent => {
-      if(ent.vertices){
+      if (ent.vertices) {
         ent.vertices.forEach(v => {
           minX = Math.min(minX, v.x);
           minY = Math.min(minY, v.y);
@@ -85,6 +88,7 @@ function calculateQuote() {
     return;
   }
 
+  // Cutting speed and sheet cost per thickness
   let cutSpeed = 0;
   let sheetCost = material.sheetCost || 0;
 
@@ -93,7 +97,8 @@ function calculateQuote() {
       alert(`Cutting not supported for ${materialName} at ${thickness}mm`);
       return;
     }
-    cutSpeed = material.cutSpeeds[thickness];
+    cutSpeed = material.cutSpeeds[thickness].speed;
+    sheetCost = material.cutSpeeds[thickness].cost;
   }
 
   const engraveSpeed = material.engraveSpeed || 0;
@@ -132,11 +137,11 @@ function calculateQuote() {
       return;
     }
 
-    // --- Calculate part area and scaled material cost ---
+    // --- Calculate part area and scale material cost ---
     let partArea = getPartArea(content, fileInput.name); // mm²
     let scaledMaterialCost = sheetCost;
-    if (material.sheetWidth && material.sheetHeight && partArea > 0) {
-      const sheetArea = material.sheetWidth * material.sheetHeight; // mm²
+    if (material.sheetWidth && material.sheetHeight && partArea > 0 && cutSpeed > 0) {
+      const sheetArea = material.sheetWidth * material.sheetHeight;
       scaledMaterialCost = (partArea / sheetArea) * sheetCost;
     }
 
@@ -159,7 +164,7 @@ function calculateQuote() {
       outputHTML += `Engraving area: ${engravingArea.toFixed(1)} cm²<br>`;
       outputHTML += `Engraving time: ${(engravingTimeSec/60).toFixed(1)} min<br>`;
     }
-    outputHTML += `Material: ${materialName} ${cutSpeed>0 ? thickness + "mm" : ""}<br>`;
+    outputHTML += `Material: ${materialName} ${cutSpeed>0 ? thickness + "mm" : "(engraving only)"}<br>`;
     outputHTML += `Material cost: €${scaledMaterialCost.toFixed(2)}<br>`;
     outputHTML += `Setup fee: €${setupFee}`;
 
