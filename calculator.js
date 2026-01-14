@@ -3,7 +3,7 @@ const setupFee = 5;      // € setup fee
 const machineRate = 45;  // €/hour
 const minimumPrice = 10; // €
 
-// Update thickness selector based on selected material
+// Update thickness selector and engraving note based on material
 function updateThicknessSelector() {
   const materialName = document.getElementById('materialSelect').value;
   const material = materialTable.find(m => m.material === materialName);
@@ -14,8 +14,8 @@ function updateThicknessSelector() {
 
   if (!material) return;
 
-  // Cutting material
   if (material.cutSpeeds && Object.keys(material.cutSpeeds).length > 0) {
+    // Cutting material
     thicknessSelect.innerHTML = "";
     Object.keys(material.cutSpeeds).forEach(thick => {
       const option = document.createElement("option");
@@ -25,12 +25,12 @@ function updateThicknessSelector() {
     });
     thicknessContainer.style.display = "block";
     thicknessSelect.style.display = "inline-block";
-    engravingNote.style.display = "none"; // hide note for cutting materials
+    engravingNote.style.display = "none"; // hide note
   } else {
     // Engraving-only
-    thicknessContainer.style.display = "block"; // keep container visible
-    thicknessSelect.style.display = "none";     // hide dropdown
-    engravingNote.style.display = "block";      // show engraving note
+    thicknessContainer.style.display = "block";   // keep container visible
+    thicknessSelect.style.display = "none";       // hide dropdown
+    engravingNote.style.display = "block";        // show note
   }
 }
 
