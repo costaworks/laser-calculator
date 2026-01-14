@@ -3,36 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <title>CostaWorks Laser Quote</title>
+  <style>
+    label { display:block; margin-top:10px; }
+    select, input { margin-bottom:10px; }
+  </style>
 </head>
 <body>
   <h1>Instant Laser Quote</h1>
 
-  <label>Upload SVG:</label>
-  <input type="file" id="fileInput"><br><br>
+  <label>Upload DXF/SVG:</label>
+  <input type="file" id="fileInput"><br>
 
   <label>Material:</label>
-  <select id="materialSelect">
-    <option value="Acrylic">Acrylic</option>
-    <option value="Plywood">Plywood</option>
-  </select><br><br>
+  <select id="materialSelect" onchange="updateThicknessSelector()">
+    <!-- Options filled dynamically -->
+  </select><br>
 
-  <label>Thickness (mm):</label>
-  <select id="thicknessSelect">
-    <option value="3">3</option>
-    <option value="6">6</option>
-  </select><br><br>
+  <div id="thicknessContainer">
+    <label>Thickness (mm):</label>
+    <select id="thicknessSelect"></select>
+  </div>
 
   <label>Engraving area (cm², optional):</label>
-  <input type="number" id="engraveArea" placeholder="0"><br><br>
+  <input type="number" id="engraveArea" placeholder="0"><br>
 
   <button onclick="calculateQuote()">Calculate Quote</button>
 
   <h2>Quote Result</h2>
   <div id="output"></div>
 
-  <script src="dxf-parser.js"></script> <!-- optional, for DXF parsing -->
-  <script src="svg-path-properties.js"></script> <!-- optional, for SVG -->
   <script src="materials.js"></script>
   <script src="calculator.js"></script>
+
+  <script>
+    // Populate material selector
+    const materialSelect = document.getElementById("materialSelect");
+    materialTable.forEach(m => {
+      const option = document.createElement("option");
+      option.value = m.material;
+      option.text = m.material;
+      materialSelect.appendChild(option);
+    });
+
+    updateThicknessSelector(); // initial setup
+  </script>
 </body>
 </html>
