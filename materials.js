@@ -1,31 +1,118 @@
 // materials.js
-// Cutting speed in mm/s, engraving speed in cm²/min
-// Update sheetCost as needed
 
 const materialTable = [
-  // ----- CUTTING MATERIALS -----
-  { material: "Wood", maxCutThickness: 20, cutSpeeds: {3:25,6:20,9:15,12:12,15:10,20:8}, engraveSpeed: 120, sheetCost: 0 },
-  { material: "Acrylic", maxCutThickness: 15, cutSpeeds: {3:18,6:12,9:8,12:6,15:5}, engraveSpeed: 150, sheetCost: 0 },
-  { material: "MDF", maxCutThickness: 9, cutSpeeds: {3:20,6:15,9:10}, engraveSpeed: 100, sheetCost: 0 },
-  { material: "Paper", maxCutThickness: 10, cutSpeeds: {1:50,3:35,6:25,10:15}, engraveSpeed: 300, sheetCost: 0 },
-  { material: "Leather", maxCutThickness: 13, cutSpeeds: {3:18,6:14,9:10,13:8}, engraveSpeed: 150, sheetCost: 0 },
-  { material: "Delrin", maxCutThickness: 14, cutSpeeds: {3:12,6:10,9:8,12:6,14:5}, engraveSpeed: 100, sheetCost: 0 },
-  { material: "Melamine", maxCutThickness: 8, cutSpeeds: {3:15,6:10,8:8}, engraveSpeed: 100, sheetCost: 0 },
-  { material: "Mylar", maxCutThickness: 7, cutSpeeds: {1:35,3:25,5:15,7:10}, engraveSpeed: 150, sheetCost: 0 },
-  { material: "Rubber", maxCutThickness: 8, cutSpeeds: {3:15,6:10,8:8}, engraveSpeed: 120, sheetCost: 0 },
-  { material: "Pressboard", maxCutThickness: 20, cutSpeeds: {3:25,6:20,9:15,12:12,15:10,20:8}, engraveSpeed: 100, sheetCost: 0 },
-  { material: "Fabric", maxCutThickness: 20, cutSpeeds: {1:35,3:25,6:15,10:10,20:5}, engraveSpeed: 150, sheetCost: 0 },
-  { material: "Cloth", maxCutThickness: 20, cutSpeeds: {1:35,3:25,6:15,10:10,20:5}, engraveSpeed: 150, sheetCost: 0 },
-  { material: "Cork", maxCutThickness: 15, cutSpeeds: {3:15,6:12,9:10,12:8,15:6}, engraveSpeed: 120, sheetCost: 0 },
-  { material: "Matte Board", maxCutThickness: 13, cutSpeeds: {3:20,6:15,9:12,13:10}, engraveSpeed: 100, sheetCost: 0 },
-  { material: "Fiberglass", maxCutThickness: 13, cutSpeeds: {3:12,6:10,9:8,12:6,13:5}, engraveSpeed: 60, sheetCost: 0 },
-
-  // ----- ENGRAVING-ONLY MATERIALS -----
-  { material: "Glass", cutSpeeds: {}, engraveSpeed: 50, sheetCost: 0 },
-  { material: "Coated/Painted Metals", cutSpeeds: {}, engraveSpeed: 40, sheetCost: 0 },
-  { material: "Anodized Aluminum", cutSpeeds: {}, engraveSpeed: 50, sheetCost: 0 },
-  { material: "Ceramic", cutSpeeds: {}, engraveSpeed: 40, sheetCost: 0 },
-  { material: "Marble", cutSpeeds: {}, engraveSpeed: 40, sheetCost: 0 },
-  { material: "Tile", cutSpeeds: {}, engraveSpeed: 40, sheetCost: 0 },
-  { material: "Corian", cutSpeeds: {}, engraveSpeed: 60, sheetCost: 0 }
+  {
+    material: "Acrylic",
+    sheetWidth: 500,   // mm
+    sheetHeight: 300,  // mm
+    sheetCost: 20,     // default cost if specific thickness not defined
+    cutSpeeds: {       // mm/sec
+      3: { speed: 8, cost: 20 },
+      6: { speed: 5, cost: 25 },
+      9: { speed: 3, cost: 30 },
+      12: { speed: 2, cost: 35 },
+      15: { speed: 1.5, cost: 40 }
+    },
+    engraveSpeed: 300   // cm²/min (engraving speed independent of thickness)
+  },
+  {
+    material: "Plywood",
+    sheetWidth: 500,
+    sheetHeight: 300,
+    sheetCost: 15,
+    cutSpeeds: {
+      3: { speed: 6, cost: 15 },
+      6: { speed: 4, cost: 18 },
+      9: { speed: 2, cost: 22 }
+    },
+    engraveSpeed: 250
+  },
+  {
+    material: "MDF",
+    sheetWidth: 500,
+    sheetHeight: 300,
+    sheetCost: 12,
+    cutSpeeds: {
+      3: { speed: 5, cost: 12 },
+      6: { speed: 3, cost: 15 },
+      9: { speed: 2, cost: 18 }
+    },
+    engraveSpeed: 200
+  },
+  {
+    material: "Leather",
+    sheetWidth: 500,
+    sheetHeight: 300,
+    sheetCost: 18,
+    cutSpeeds: {
+      1: { speed: 6, cost: 18 },
+      2: { speed: 5, cost: 19 },
+      3: { speed: 4, cost: 20 },
+      6: { speed: 2, cost: 22 },
+      13: { speed: 1, cost: 25 }
+    },
+    engraveSpeed: 120
+  },
+  {
+    material: "Paper",
+    sheetWidth: 500,
+    sheetHeight: 300,
+    sheetCost: 5,
+    cutSpeeds: {
+      1: { speed: 20, cost: 5 },
+      2: { speed: 15, cost: 6 },
+      5: { speed: 10, cost: 8 },
+      10: { speed: 5, cost: 10 }
+    },
+    engraveSpeed: 400
+  },
+  {
+    material: "Glass",
+    sheetWidth: 500,
+    sheetHeight: 300,
+    sheetCost: 50,
+    cutSpeeds: {},        // engraving-only
+    engraveSpeed: 80
+  },
+  {
+    material: "Anodized Aluminum",
+    sheetWidth: 500,
+    sheetHeight: 300,
+    sheetCost: 60,
+    cutSpeeds: {},        // engraving-only
+    engraveSpeed: 100
+  },
+  {
+    material: "Ceramic",
+    sheetWidth: 500,
+    sheetHeight: 300,
+    sheetCost: 45,
+    cutSpeeds: {},        // engraving-only
+    engraveSpeed: 90
+  },
+  {
+    material: "Marble",
+    sheetWidth: 500,
+    sheetHeight: 300,
+    sheetCost: 55,
+    cutSpeeds: {},        // engraving-only
+    engraveSpeed: 70
+  },
+  {
+    material: "Tile",
+    sheetWidth: 500,
+    sheetHeight: 300,
+    sheetCost: 40,
+    cutSpeeds: {},        // engraving-only
+    engraveSpeed: 75
+  },
+  {
+    material: "Corian",
+    sheetWidth: 500,
+    sheetHeight: 300,
+    sheetCost: 50,
+    cutSpeeds: {},        // engraving-only
+    engraveSpeed: 80
+  }
+  // Add remaining materials similarly...
 ];
