@@ -3,7 +3,7 @@ const setupFee = 5;      // € setup fee
 const machineRate = 45;  // €/hour
 const minimumPrice = 10; // €
 
-// Update thickness selector and engraving note based on material
+// Update thickness selector and engraving note based on selected material
 function updateThicknessSelector() {
   const materialName = document.getElementById('materialSelect').value;
   const material = materialTable.find(m => m.material === materialName);
@@ -32,6 +32,39 @@ function updateThicknessSelector() {
     thicknessSelect.style.display = "none";       // hide dropdown
     engravingNote.style.display = "block";        // show note
   }
+}
+
+// Approximate part area for material cost scaling
+function getPartArea(fileContent, fileName) {
+  let totalArea = 0;
+
+  if (fileName.endsWith('.svg')) {
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(fileContent, "image/svg+xml");
+    const paths = svgDoc.querySelectorAll("path");
+    paths.forEach(path => {
+      const bbox = path.getBBox ? path.getBBox() : { width: 0, height: 0 };
+      totalArea += bbox.width * bbox.height; // mm²
+    });
+  } else if (fileName.endsWith('.dxf')) {
+    if (typeof DxfParser === "undefined") return 0;
+    const parser = new DxfParser();
+    const dxf = parser.parseSync(fileContent);
+    let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+    dxf.entities.forEach(ent => {
+      if(ent.vertices){
+        ent.vertices.forEach(v => {
+          minX = Math.min(minX, v.x);
+          minY = Math.min(minY, v.y);
+          maxX = Math.max(maxX, v.x);
+          maxY = Math.max(maxY, v.y);
+        });
+      }
+    });
+    if (minX !== Infinity) totalArea = (maxX - minX) * (maxY - minY);
+  }
+
+  return totalArea; // mm²
 }
 
 // Main quote calculation
@@ -71,6 +104,7 @@ function calculateQuote() {
   reader.onload = function(e) {
     const content = e.target.result;
 
+    // --- Calculate cut length ---
     if (fileInput.name.endsWith('.svg')) {
       const parser = new DOMParser();
       const svgDoc = parser.parseFromString(content, "image/svg+xml");
@@ -98,15 +132,24 @@ function calculateQuote() {
       return;
     }
 
-    // Calculate times
+    // --- Calculate part area and scaled material cost ---
+    let partArea = getPartArea(content, fileInput.name); // mm²
+    let scaledMaterialCost = sheetCost;
+    if (material.sheetWidth && material.sheetHeight && partArea > 0) {
+      const sheetArea = material.sheetWidth * material.sheetHeight; // mm²
+      scaledMaterialCost = (partArea / sheetArea) * sheetCost;
+    }
+
+    // --- Calculate times ---
     const cutTimeSec = cutSpeed > 0 ? (totalCutLength / cutSpeed) * 1.15 : 0;
     const engravingTimeSec = engraveSpeed > 0 ? (engravingArea / engraveSpeed) * 60 : 0;
     const totalTimeHr = (cutTimeSec + engravingTimeSec) / 3600;
 
     const cutCost = totalTimeHr * machineRate;
-    const rawPrice = cutCost + sheetCost + setupFee;
+    const rawPrice = cutCost + scaledMaterialCost + setupFee;
     const totalPrice = Math.max(rawPrice, minimumPrice);
 
+    // --- Output ---
     let outputHTML = `<strong>Total: €${totalPrice.toFixed(2)}</strong><br>`;
     if (cutSpeed > 0) {
       outputHTML += `Cut length: ${totalCutLength.toFixed(0)} mm<br>`;
@@ -117,7 +160,7 @@ function calculateQuote() {
       outputHTML += `Engraving time: ${(engravingTimeSec/60).toFixed(1)} min<br>`;
     }
     outputHTML += `Material: ${materialName} ${cutSpeed>0 ? thickness + "mm" : ""}<br>`;
-    outputHTML += `Material cost: €${sheetCost}<br>`;
+    outputHTML += `Material cost: €${scaledMaterialCost.toFixed(2)}<br>`;
     outputHTML += `Setup fee: €${setupFee}`;
 
     document.getElementById('output').innerHTML = outputHTML;
