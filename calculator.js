@@ -1,7 +1,8 @@
 // Example material data
 
-const setupFee = 15;
+const setupFee = 5;
 const machineRate = 45; // €/hour
+const minimumPrice = 10;
 
 async function calculateQuote() {
   const fileInput = document.getElementById('fileInput').files[0];
