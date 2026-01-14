@@ -1,10 +1,9 @@
 // calculator.js
 
-const setupFee = 5;      // € setup fee
-const machineRate = 45;  // €/hour
-const minimumPrice = 10; // €
+const setupFee = 5;      
+const machineRate = 45;  
+const minimumPrice = 10; 
 
-// Update thickness selector and engraving note based on selected material
 function updateThicknessSelector() {
   const materialName = document.getElementById('materialSelect').value;
   const material = materialTable.find(m => m.material === materialName);
@@ -16,7 +15,6 @@ function updateThicknessSelector() {
   if (!material) return;
 
   if (material.cutSpeeds && Object.keys(material.cutSpeeds).length > 0) {
-    // Cutting material
     thicknessSelect.innerHTML = "";
     Object.keys(material.cutSpeeds).forEach(thick => {
       const option = document.createElement("option");
@@ -26,29 +24,41 @@ function updateThicknessSelector() {
     });
     thicknessContainer.style.display = "block";
     thicknessSelect.style.display = "inline-block";
-    engravingNote.style.display = "none"; // hide note
+    engravingNote.style.display = "none";
   } else {
-    // Engraving-only
-    thicknessContainer.style.display = "block";   // keep container visible
-    thicknessSelect.style.display = "none";       // hide dropdown
-    engravingNote.style.display = "block";        // show note
+    thicknessContainer.style.display = "block";
+    thicknessSelect.style.display = "none";
+    engravingNote.style.display = "block";
   }
 }
 
-// Approximate part area for material cost scaling
-function getPartArea(fileContent, fileName) {
+function getPartArea(fileContent, fileName, autoEngrave=false) {
   let totalArea = 0;
 
   if (fileName.endsWith('.svg')) {
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(fileContent, "image/svg+xml");
-    const paths = svgDoc.querySelectorAll("path");
-    paths.forEach(path => {
-      if (path.getBBox) {
-        const bbox = path.getBBox();
-        totalArea += bbox.width * bbox.height; // mm²
-      }
-    });
+
+    if (autoEngrave) {
+      // Only sum paths with fill="#000000" or some user convention
+      const paths = svgDoc.querySelectorAll("path, rect, circle, ellipse, polygon");
+      paths.forEach(el => {
+        const fill = el.getAttribute("fill") || "";
+        if (fill === "#000000" || fill.toLowerCase() === "black") {
+          const bbox = el.getBBox();
+          totalArea += bbox.width * bbox.height;
+        }
+      });
+    } else {
+      // Normal bounding box approximation for manual
+      const paths = svgDoc.querySelectorAll("path");
+      paths.forEach(path => {
+        if (path.getBBox) {
+          const bbox = path.getBBox();
+          totalArea += bbox.width * bbox.height;
+        }
+      });
+    }
   } else if (fileName.endsWith('.dxf')) {
     if (typeof DxfParser === "undefined") return 0;
     const parser = new DxfParser();
@@ -67,15 +77,15 @@ function getPartArea(fileContent, fileName) {
     if (minX !== Infinity) totalArea = (maxX - minX) * (maxY - minY);
   }
 
-  return totalArea; // mm²
+  return totalArea; 
 }
 
-// Main quote calculation
 function calculateQuote() {
   const fileInput = document.getElementById('fileInput').files[0];
   const materialName = document.getElementById('materialSelect').value;
   const thickness = parseInt(document.getElementById('thicknessSelect').value) || 0;
-  const engravingArea = parseFloat(document.getElementById('engraveArea').value) || 0;
+  const engravingAreaManual = parseFloat(document.getElementById('engraveArea').value) || 0;
+  const autoEngrave = document.getElementById('autoEngrave').checked;
 
   if (!fileInput) {
     alert("Please upload a DXF or SVG file");
@@ -88,7 +98,6 @@ function calculateQuote() {
     return;
   }
 
-  // Cutting speed and sheet cost per thickness
   let cutSpeed = 0;
   let sheetCost = material.sheetCost || 0;
 
@@ -103,13 +112,11 @@ function calculateQuote() {
 
   const engraveSpeed = material.engraveSpeed || 0;
 
-  let totalCutLength = 0;
   const reader = new FileReader();
-
   reader.onload = function(e) {
     const content = e.target.result;
+    let totalCutLength = 0;
 
-    // --- Calculate cut length ---
     if (fileInput.name.endsWith('.svg')) {
       const parser = new DOMParser();
       const svgDoc = parser.parseFromString(content, "image/svg+xml");
@@ -137,31 +144,30 @@ function calculateQuote() {
       return;
     }
 
-    // --- Calculate part area and scale material cost ---
-    let partArea = getPartArea(content, fileInput.name); // mm²
+    // Material cost scaled by part area
+    let partArea = getPartArea(content, fileInput.name, autoEngrave);
+    if (!autoEngrave && engravingAreaManual > 0) partArea = 0; // engraving handled manually
     let scaledMaterialCost = sheetCost;
     if (material.sheetWidth && material.sheetHeight && partArea > 0 && cutSpeed > 0) {
       const sheetArea = material.sheetWidth * material.sheetHeight;
       scaledMaterialCost = (partArea / sheetArea) * sheetCost;
     }
 
-    // --- Calculate times ---
     const cutTimeSec = cutSpeed > 0 ? (totalCutLength / cutSpeed) * 1.15 : 0;
-    const engravingTimeSec = engraveSpeed > 0 ? (engravingArea / engraveSpeed) * 60 : 0;
+    const engravingTimeSec = engraveSpeed > 0 ? (engravingAreaManual / engraveSpeed) * 60 : 0;
     const totalTimeHr = (cutTimeSec + engravingTimeSec) / 3600;
 
     const cutCost = totalTimeHr * machineRate;
     const rawPrice = cutCost + scaledMaterialCost + setupFee;
     const totalPrice = Math.max(rawPrice, minimumPrice);
 
-    // --- Output ---
     let outputHTML = `<strong>Total: €${totalPrice.toFixed(2)}</strong><br>`;
     if (cutSpeed > 0) {
       outputHTML += `Cut length: ${totalCutLength.toFixed(0)} mm<br>`;
       outputHTML += `Cut time: ${(cutTimeSec/60).toFixed(1)} min<br>`;
     }
     if (engraveSpeed > 0) {
-      outputHTML += `Engraving area: ${engravingArea.toFixed(1)} cm²<br>`;
+      outputHTML += `Engraving area: ${engravingAreaManual.toFixed(1)} cm²<br>`;
       outputHTML += `Engraving time: ${(engravingTimeSec/60).toFixed(1)} min<br>`;
     }
     outputHTML += `Material: ${materialName} ${cutSpeed>0 ? thickness + "mm" : "(engraving only)"}<br>`;
