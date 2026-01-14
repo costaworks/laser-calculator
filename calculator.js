@@ -3,7 +3,7 @@ const setupFee = 5;      // € setup fee
 const machineRate = 45;  // €/hour
 const minimumPrice = 10; // €
 
-// Update thickness selector dynamically based on material
+// Update thickness selector based on selected material
 function updateThicknessSelector() {
   const materialName = document.getElementById('materialSelect').value;
   const material = materialTable.find(m => m.material === materialName);
@@ -25,11 +25,12 @@ function updateThicknessSelector() {
   } else {
     // Engraving-only
     thicknessContainer.style.display = "none";
+    alert(`"${materialName}" is an engraving-only material. Thickness is not required.`);
   }
 }
 
 // Main quote calculation
-async function calculateQuote() {
+function calculateQuote() {
   const fileInput = document.getElementById('fileInput').files[0];
   const materialName = document.getElementById('materialSelect').value;
   const thickness = parseInt(document.getElementById('thicknessSelect').value) || 0;
@@ -92,6 +93,7 @@ async function calculateQuote() {
       return;
     }
 
+    // Calculate times
     const cutTimeSec = cutSpeed > 0 ? (totalCutLength / cutSpeed) * 1.15 : 0;
     const engravingTimeSec = engraveSpeed > 0 ? (engravingArea / engraveSpeed) * 60 : 0;
     const totalTimeHr = (cutTimeSec + engravingTimeSec) / 3600;
