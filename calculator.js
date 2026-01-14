@@ -59,13 +59,15 @@ async function calculateQuote() {
     alert
 
 
-    const cutTimeSec = totalCutLength / cutSpeed * 1.15; // 15% buffer
+   // Pricing
+    const cutTimeSec = (totalCutLength / cutSpeed) * 1.15;
     const engravingTimeSec = engravingArea / engravingSpeed;
     const totalTimeHr = (cutTimeSec + engravingTimeSec) / 3600;
 
     const cutCost = totalTimeHr * machineRate;
     const rawPrice = cutCost + sheetCost + setupFee;
     const totalPrice = Math.max(rawPrice, minimumPrice);
+
 
     document.getElementById('output').innerHTML =
       `Material: ${material} ${thickness}mm<br>` +
